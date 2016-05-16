@@ -110,6 +110,13 @@ void RoundingApply(int fcr31) {
 	case 3: mode = FE_DOWNWARD; break;  // FLOOR_3
 	}
 	fesetround(mode);
+#ifdef _M_SSE
+	if (fcr31 & 0x01000000) {
+		_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+	} else {
+		_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+	}
+#endif
 }
 
 void IRJit::RunLoopUntil(u64 globalticks) {
@@ -128,7 +135,7 @@ void IRJit::RunLoopUntil(u64 globalticks) {
 			if (opcode == MIPS_EMUHACK_OPCODE) {
 				u32 data = inst & 0xFFFFFF;
 				IRBlock *block = blocks_.GetBlock(data);
-				mips_->pc = IRInterpret(mips_, block->GetInstructions(), block->GetConstants(), block->GetNumInstructions(), &frontend_);
+				mips_->pc = IRInterpret(mips_, block->GetInstructions(), block->GetConstants(), block->GetNumInstructions());
 			} else {
 				fesetround(FE_TONEAREST);
 				Compile(mips_->pc);
@@ -159,6 +166,9 @@ bool IRJit::ReplaceJalTo(u32 dest) {
 }
 
 void IRBlockCache::Clear() {
+	for (size_t i = 0; i < blocks_.size(); ++i) {
+		blocks_[i].Destroy(i);
+	}
 	blocks_.clear();
 }
 
@@ -166,10 +176,65 @@ void IRBlockCache::InvalidateICache(u32 addess, u32 length) {
 	// TODO
 }
 
+std::vector<u32> IRBlockCache::SaveAndClearEmuHackOps() {
+	std::vector<u32> result;
+	result.resize(size_);
+
+	for (int number = 0; number < size_; ++number) {
+		IRBlock &b = blocks_[number];
+		if (b.IsValid() && b.RestoreOriginalFirstOp(number)) {
+			result[number] = number;
+		} else {
+			result[number] = 0;
+		}
+	}
+
+	return result;
+}
+
+void IRBlockCache::RestoreSavedEmuHackOps(std::vector<u32> saved) {
+	if (size_ != (int)saved.size()) {
+		ERROR_LOG(JIT, "RestoreSavedEmuHackOps: Wrong saved block size.");
+		return;
+	}
+
+	for (int number = 0; number < size_; ++number) {
+		IRBlock &b = blocks_[number];
+		// Only if we restored it, write it back.
+		if (b.IsValid() && saved[number] != 0 && b.HasOriginalFirstOp()) {
+			b.Finalize(number);
+		}
+	}
+}
+
+bool IRBlock::HasOriginalFirstOp() {
+	return Memory::ReadUnchecked_U32(origAddr_) == origFirstOpcode_.encoding;
+}
+
+bool IRBlock::RestoreOriginalFirstOp(int number) {
+	const u32 emuhack = MIPS_EMUHACK_OPCODE | number;
+	if (Memory::ReadUnchecked_U32(origAddr_) == emuhack) {
+		Memory::Write_Opcode_JIT(origAddr_, origFirstOpcode_);
+		return true;
+	}
+	return false;
+}
+
 void IRBlock::Finalize(int number) {
 	origFirstOpcode_ = Memory::Read_Opcode_JIT(origAddr_);
 	MIPSOpcode opcode = MIPSOpcode(MIPS_EMUHACK_OPCODE | number);
 	Memory::Write_Opcode_JIT(origAddr_, opcode);
+}
+
+void IRBlock::Destroy(int number) {
+	if (origAddr_) {
+		MIPSOpcode opcode = MIPSOpcode(MIPS_EMUHACK_OPCODE | number);
+		if (Memory::ReadUnchecked_U32(origAddr_) == opcode.encoding)
+			Memory::Write_Opcode_JIT(origAddr_, origFirstOpcode_);
+
+		// Let's mark this invalid so we don't try to clear it again.
+		origAddr_ = 0;
+	}
 }
 
 MIPSOpcode IRJit::GetOriginalOp(MIPSOpcode op) {
