@@ -540,7 +540,7 @@ OpenGLContext::OpenGLContext() {
 		break;
   }
 	for (int i = 0; i < GLRenderManager::MAX_INFLIGHT_FRAMES; i++) {
-		frameData_[i].push = new GLPushBuffer(&renderManager_, 64 * 1024);
+		frameData_[i].push = new GLPushBuffer(&renderManager_, GL_ARRAY_BUFFER, 64 * 1024);
 	}
 }
 
@@ -1165,7 +1165,6 @@ void OpenGLContext::DrawUP(const void *vdata, int vertexCount) {
 	renderManager_.BindInputLayout(curPipeline_->inputLayout->inputLayout_, (void *)offset);
 
 	renderManager_.Draw(curPipeline_->prim, 0, vertexCount);
-	renderManager_.BindVertexBuffer(nullptr);
 #else
 	ApplySamplers();
 	renderManager_.BindInputLayout(curPipeline_->inputLayout->inputLayout_, (void *)vdata);
