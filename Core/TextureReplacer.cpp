@@ -296,12 +296,8 @@ void TextureReplacer::PopulateReplacement(ReplacedTexture *result, u64 cachekey,
 			level.h = (png.height * h) / newH;
 			if (i != 0) {
 				// Check that the mipmap size is correct. Can't load mips of the wrong size.
-				if (level.w != (result->levels_[0].w >> i)) {
-					WARN_LOG(G3D, "Replacement mipmap invalid: width=%d, expected=%d (level %d, '%s')", level.w, result->levels_[0].w >> i, i, filename.c_str());
-					bad = true;
-				}
-				if (level.h != (result->levels_[0].h >> i)) {
-					WARN_LOG(G3D, "Replacement mipmap invalid: height=%d, expected=%d (level %d, '%s')", level.h, result->levels_[0].h >> i, i, filename.c_str());
+				if (level.w != (result->levels_[0].w >> i) || level.h != (result->levels_[0].h >> i)) {
+					WARN_LOG(G3D, "Replacement mipmap invalid: size=%dx%d, expected=%dx%d (level %d, '%s')", level.w, level.h, result->levels_[0].w >> i, result->levels_[0].h >> i, i, filename.c_str());
 					bad = true;
 				}
 			}
