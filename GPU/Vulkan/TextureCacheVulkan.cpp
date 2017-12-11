@@ -790,7 +790,7 @@ void TextureCacheVulkan::BuildTexture(TexCacheEntry *const entry, bool replaceIm
 						VkBuffer localBuf;
 						uint32_t localOffset;
 						uint32_t localSize = size;
-						localOffset = drawEngine_->GetPushBufferLocal()->Allocate(localSize, &localBuf);
+						localOffset = (uint32_t)drawEngine_->GetPushBufferLocal()->Allocate(localSize, &localBuf);
 
 						VkDescriptorSet descSet = computeShaderManager_.GetDescriptorSet(VK_NULL_HANDLE, texBuf, bufferOffset, size, localBuf, localOffset, localSize);
 						vkCmdBindPipeline(cmdInit, VK_PIPELINE_BIND_POINT_COMPUTE, computeShaderManager_.GetPipeline(copyCS_));
@@ -800,11 +800,16 @@ void TextureCacheVulkan::BuildTexture(TexCacheEntry *const entry, bool replaceIm
 						vkCmdDispatch(cmdInit, (mipWidth + 15) / 16, (mipHeight + 15) / 16, 1);
 
 						// After the compute, before the copy, we need a memory barrier.
-						VkMemoryBarrier barrier{ VK_STRUCTURE_TYPE_MEMORY_BARRIER };
+						VkBufferMemoryBarrier barrier{ VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER };
 						barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
 						barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+						barrier.buffer = localBuf;
+						barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+						barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+						barrier.offset = localOffset;
+						barrier.size = localSize;
 						vkCmdPipelineBarrier(cmdInit, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-							0, 1, &barrier, 0, nullptr, 0, nullptr);
+							0, 0, nullptr, 1, &barrier, 0, nullptr);
 
 						entry->vkTex->texture_->UploadMip(cmdInit, i, mipWidth, mipHeight, localBuf, localOffset, stride / bpp);
 					} else {
