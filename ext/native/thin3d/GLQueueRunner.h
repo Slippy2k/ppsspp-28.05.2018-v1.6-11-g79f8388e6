@@ -307,6 +307,8 @@ public:
 		targetHeight_ = height;
 	}
 private:
+	void InitCreateFramebuffer(const GLRInitStep &step);
+
 	void PerformBindFramebufferAsRenderTarget(const GLRStep &pass);
 	void PerformRenderPass(const GLRStep &pass);
 	void PerformCopy(const GLRStep &pass);
@@ -322,6 +324,12 @@ private:
 
 	void ResizeReadbackBuffer(size_t requiredSize);
 
+	void fbo_ext_create(const GLRInitStep &step);
+	void fbo_bind_fb_target(bool read, GLuint name);
+	GLenum fbo_get_fb_target(bool read, GLuint **cached);
+	void fbo_unbind();
+
+
 	GLuint globalVAO_;
 
 	GLint curFramebuffer_ = 0;
@@ -336,6 +344,10 @@ private:
 	int readbackBufferSize_ = 0;
 
 	float maxAnisotropyLevel_;
+
+	// Framebuffer state?
+	GLuint currentDrawHandle_ = 0;
+	GLuint currentReadHandle_ = 0;
 
 	GLuint AllocTextureName();
 	// Texture name cache. Ripped straight from TextureCacheGLES.
