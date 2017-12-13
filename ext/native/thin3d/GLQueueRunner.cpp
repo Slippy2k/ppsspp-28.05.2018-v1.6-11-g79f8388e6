@@ -369,6 +369,9 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 
 	int attrMask = 0;
 
+	// TODO: We can implement state-filtering locally in this function, to mimic the old gl state tracker,
+	// to avoid redundant calls. Might be worth it?
+
 	auto &commands = step.commands;
 	for (const auto &c : commands) {
 		switch (c.cmd) {
@@ -577,6 +580,13 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 			if (c.textureSampler.anisotropy != 0.0f) {
 				glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, c.textureSampler.anisotropy);
 			}
+			break;
+		case GLRRenderCommand::TEXTURELOD:
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_LOD, c.textureLod.minLod);
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, c.textureLod.maxLod);
+#ifndef USING_GLES2
+			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, c.textureLod.lodBias);
+#endif
 			break;
 		case GLRRenderCommand::RASTER:
 			if (c.raster.cullEnable) {

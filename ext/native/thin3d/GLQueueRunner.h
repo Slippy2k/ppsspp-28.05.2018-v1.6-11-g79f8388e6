@@ -36,6 +36,7 @@ enum class GLRRenderCommand : uint8_t {
 	UNIFORM4F,
 	UNIFORMMATRIX,
 	TEXTURESAMPLER,
+	TEXTURELOD,
 	VIEWPORT,
 	SCISSOR,
 	RASTER,
@@ -143,6 +144,11 @@ struct GLRRenderData {
 			GLenum minFilter;  // also includes mip. GL...
 			float anisotropy;
 		} textureSampler;
+		struct {
+			float minLod;
+			float maxLod;
+			float lodBias;
+		} textureLod;
 		struct {
 			GLRViewport vp;
 		} viewport;

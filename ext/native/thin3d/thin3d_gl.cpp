@@ -639,16 +639,6 @@ OpenGLTexture::OpenGLTexture(GLRenderManager *render, const TextureDesc &desc) :
 	}
 	mipLevels_ = desc.generateMips ? desc.mipLevels : level;
 
-	/*
-#ifdef USING_GLES2
-	if (gl_extensions.GLES3) {
-		glTexParameteri(target_, GL_TEXTURE_MAX_LEVEL, mipLevels_ - 1);
-	}
-#else
-	glTexParameteri(target_, GL_TEXTURE_MAX_LEVEL, mipLevels_ - 1);
-#endif
-*/
-
 	if ((int)desc.initData.size() < desc.mipLevels && desc.generateMips) {
 		ILOG("Generating mipmaps");
 		AutoGenMipmaps();

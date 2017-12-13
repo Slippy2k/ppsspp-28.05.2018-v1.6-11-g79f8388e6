@@ -526,6 +526,15 @@ public:
 		curRenderStep_->commands.push_back(data);
 	}
 
+	void SetTextureLod(float minLod, float maxLod, float lodBias) {
+		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
+		GLRRenderData data{ GLRRenderCommand::TEXTURELOD};
+		data.textureLod.minLod = minLod;
+		data.textureLod.maxLod = maxLod;
+		data.textureLod.lodBias = lodBias;
+		curRenderStep_->commands.push_back(data);
+	}
+
 	void Clear(uint32_t clearColor, float clearZ, int clearStencil, int clearMask) {
 		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
 		GLRRenderData data{ GLRRenderCommand::CLEAR };
