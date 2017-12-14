@@ -413,7 +413,9 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 	glActiveTexture(GL_TEXTURE0 + activeTexture);
 
 	int attrMask = 0;
-
+	int colorMask = -1;
+	int depthMask = -1;
+	int depthFunc = -1;
 	// State filtering tracking.
 	GLuint curArrayBuffer = (GLuint)-1;
 	GLuint curElemArrayBuffer = (GLuint)-1;
@@ -424,8 +426,14 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 		case GLRRenderCommand::DEPTH:
 			if (c.depth.enabled) {
 				glEnable(GL_DEPTH_TEST);
-				glDepthMask(c.depth.write);
-				glDepthFunc(c.depth.func);
+				if (c.depth.write != depthMask) {
+					glDepthMask(c.depth.write);
+					depthMask = c.depth.write;
+				}
+				if (c.depth.func != depthFunc) {
+					glDepthFunc(c.depth.func);
+					depthFunc = c.depth.func;
+				}
 			} else {
 				glDisable(GL_DEPTH_TEST);
 			}
@@ -438,11 +446,15 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 			} else {
 				glDisable(GL_BLEND);
 			}
-			glColorMask(c.blend.mask & 1, (c.blend.mask >> 1) & 1, (c.blend.mask >> 2) & 1, (c.blend.mask >> 3) & 1);
+			if (c.blend.mask != colorMask) {
+				glColorMask(c.blend.mask & 1, (c.blend.mask >> 1) & 1, (c.blend.mask >> 2) & 1, (c.blend.mask >> 3) & 1);
+				colorMask = c.blend.mask;
+			}
 			break;
 		case GLRRenderCommand::CLEAR:
 			glDisable(GL_SCISSOR_TEST);
 			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			colorMask = 0xF;
 			if (c.clear.clearMask & GL_COLOR_BUFFER_BIT) {
 				float color[4];
 				Uint8x4ToFloat4(color, c.clear.clearColor);
@@ -597,8 +609,10 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 		}
 		case GLRRenderCommand::BINDPROGRAM:
 		{
-			glUseProgram(c.program.program->program);
-			curProgram = c.program.program;
+			if (curProgram != c.program.program) {
+				glUseProgram(c.program.program->program);
+				curProgram = c.program.program;
+			}
 			break;
 		}
 		case GLRRenderCommand::BIND_INPUT_LAYOUT:

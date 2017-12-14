@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 #include <cassert>
 
 #include "gfx/gl_common.h"
