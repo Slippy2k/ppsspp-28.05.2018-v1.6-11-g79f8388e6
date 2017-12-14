@@ -70,7 +70,7 @@ void TextureCacheGLES::SetFramebufferManager(FramebufferManagerGLES *fbManager) 
 }
 
 void TextureCacheGLES::ReleaseTexture(TexCacheEntry *entry, bool delete_them) {
-	DEBUG_LOG(G3D, "Deleting texture %i", entry->textureName);
+	DEBUG_LOG(G3D, "Deleting texture %08x", entry->addr);
 	if (delete_them) {
 		if (entry->textureName) {
 			render_->DeleteTexture(entry->textureName);
@@ -403,10 +403,10 @@ public:
 		int order[4] = { 0 ,1, 3, 2 };
 		for (int i = 0; i < 4; i++) {
 			memcpy(verts[i].pos, &pos_[order[i]], sizeof(Pos));
-			memcpy(verts[i].uv, &uv_[order[i]], sizeof(UV));;
+			memcpy(verts[i].uv, &uv_[order[i]], sizeof(UV));
 		}
 		render->BindVertexBuffer(bindBuffer);
-		render->BindInputLayout(inputLayout, (const void *)bindOffset);
+		render->BindInputLayout(inputLayout, bindOffset);
 	}
 
 	void Shade(GLRenderManager *render) {
@@ -442,9 +442,8 @@ void TextureCacheGLES::ApplyTextureFramebuffer(TexCacheEntry *entry, VirtualFram
 		shaderApply.ApplyBounds(gstate_c.vertBounds, gstate_c.curTextureXOffset, gstate_c.curTextureYOffset);
 		shaderApply.Use(render_, drawEngine_, shadeInputLayout_);
 
-		render_->BindTexture(3, clutTexture);
-
 		framebufferManagerGL_->BindFramebufferAsColorTexture(0, framebuffer, BINDFBCOLOR_SKIP_COPY);
+		render_->BindTexture(3, clutTexture);
 		render_->SetTextureSampler(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE, GL_NEAREST, GL_NEAREST, 0.0f);
 
 		shaderApply.Shade(render_);
@@ -468,6 +467,9 @@ void TextureCacheGLES::ApplyTextureFramebuffer(TexCacheEntry *entry, VirtualFram
 	SetFramebufferSamplingParams(framebuffer->bufferWidth, framebuffer->bufferHeight);
 
 	InvalidateLastTexture();
+
+	// Since we started/ended render passes, might need these.
+	gstate_c.Dirty(DIRTY_BLEND_STATE | DIRTY_DEPTHSTENCIL_STATE | DIRTY_RASTER_STATE | DIRTY_VIEWPORTSCISSOR_STATE);
 }
 
 ReplacedTextureFormat FromGLESFormat(GLenum fmt) {
