@@ -41,6 +41,7 @@ enum class GLRRenderCommand : uint8_t {
 	SCISSOR,
 	RASTER,
 	CLEAR,
+	INVALIDATE,
 	BINDPROGRAM,
 	BINDTEXTURE,
 	BIND_FB_TEXTURE,

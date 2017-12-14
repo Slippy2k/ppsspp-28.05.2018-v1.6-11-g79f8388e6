@@ -385,8 +385,8 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 
 	GLRFramebuffer *fb = step.render.framebuffer;
 	GLRProgram *curProgram = nullptr;
-	GLint activeTexture = GL_TEXTURE0;
-	glActiveTexture(activeTexture);
+	int activeTexture = 0;
+	glActiveTexture(GL_TEXTURE0 + activeTexture);
 
 	int attrMask = 0;
 
@@ -437,6 +437,19 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 			glClear(c.clear.clearMask);
 			glEnable(GL_SCISSOR_TEST);
 			break;
+		case GLRRenderCommand::INVALIDATE:
+		{
+			GLenum attachments[3];
+			int count = 0;
+			if (c.clear.clearMask & GL_COLOR_BUFFER_BIT)
+				attachments[count++] = GL_COLOR_ATTACHMENT0;
+			if (c.clear.clearMask & GL_DEPTH_BUFFER_BIT)
+				attachments[count++] = GL_DEPTH_ATTACHMENT;
+			if (c.clear.clearMask & GL_STENCIL_BUFFER_BIT)
+				attachments[count++] = GL_STENCIL_BUFFER_BIT;
+			glInvalidateFramebuffer(GL_FRAMEBUFFER, count, attachments);
+			break;
+		}
 		case GLRRenderCommand::BLENDCOLOR:
 			glBlendColor(c.blendColor.color[0], c.blendColor.color[1], c.blendColor.color[2], c.blendColor.color[3]);
 			break;
@@ -659,12 +672,17 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 		}
 	}
 
-	if (activeTexture != GL_TEXTURE0)
+	if (activeTexture != 0)
 		glActiveTexture(GL_TEXTURE0);
+
+	// Wipe out the current state.
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 	glDisable(GL_SCISSOR_TEST);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 }
 
 void GLQueueRunner::PerformCopy(const GLRStep &step) {
@@ -742,14 +760,11 @@ void GLQueueRunner::PerformBindFramebufferAsRenderTarget(const GLRStep &pass) {
 	if (curFB_) {
 		// Without FBO_ARB / GLES3, this will collide with bind_for_read, but there's nothing
 		// in ES 2.0 that actually separate them anyway of course, so doesn't matter.
-		fbo_bind_fb_target(false, curFB_->framebuf);
+		fbo_bind_fb_target(false, curFB_->handle);
 	} else {
 		fbo_unbind();
 		// Backbuffer is now bound.
 	}
-
-	// GLenum attachments[3] = { GL_COLOR_ATTACHMENT0, GL_STENCIL_ATTACHMENT, GL_DEPTH_ATTACHMENT };
-	// glInvalidateFramebuffer(GL_FRAMEBUFFER, 3, attachments);
 }
 
 void GLQueueRunner::CopyReadbackBuffer(int width, int height, Draw::DataFormat srcFormat, Draw::DataFormat destFormat, int pixelStride, uint8_t *pixels) {

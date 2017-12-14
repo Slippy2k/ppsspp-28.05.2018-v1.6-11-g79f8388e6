@@ -33,7 +33,6 @@ public:
 	int height;
 	GLuint colorDepth;
 
-	GLuint framebuf = 0;
 	bool z_stencil_;
 };
 
@@ -553,6 +552,13 @@ public:
 		data.clear.clearColor = clearColor;
 		data.clear.clearZ = clearZ;
 		data.clear.clearStencil = clearStencil;
+		curRenderStep_->commands.push_back(data);
+	}
+
+	void Invalidate(int invalidateMask) {
+		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
+		GLRRenderData data{ GLRRenderCommand::INVALIDATE };
+		data.clear.clearMask = invalidateMask;
 		curRenderStep_->commands.push_back(data);
 	}
 

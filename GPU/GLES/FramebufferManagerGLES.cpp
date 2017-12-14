@@ -281,7 +281,7 @@ void FramebufferManagerGLES::CreateDeviceObjects() {
 
 	std::vector<GLRInputLayout::Entry> entries;
 	entries.push_back({ 0, 3, GL_FLOAT, GL_FALSE, sizeof(Simple2DVertex), offsetof(Simple2DVertex, pos) });
-	entries.push_back({ 0, 2, GL_FLOAT, GL_FALSE, sizeof(Simple2DVertex), offsetof(Simple2DVertex, uv) });
+	entries.push_back({ 1, 2, GL_FLOAT, GL_FALSE, sizeof(Simple2DVertex), offsetof(Simple2DVertex, uv) });
 	simple2DInputLayout_ = render_->CreateInputLayout(entries);
 }
 
