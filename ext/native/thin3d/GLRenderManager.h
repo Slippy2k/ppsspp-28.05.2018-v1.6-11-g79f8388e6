@@ -330,21 +330,32 @@ public:
 	void BindProgram(GLRProgram *program) {
 		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
 		GLRRenderData data{ GLRRenderCommand::BINDPROGRAM };
+		_dbg_assert_(G3D, program != nullptr);
 		data.program.program = program;
 		curRenderStep_->commands.push_back(data);
 	}
 
 	void BindVertexBuffer(GLRBuffer *buffer) {  // Want to support an offset but can't in ES 2.0. We supply an offset when binding the buffers instead.
 		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
-		GLRRenderData data{ GLRRenderCommand::BIND_VERTEX_BUFFER };
+		GLRRenderData data{ GLRRenderCommand::BIND_BUFFER };
 		data.bind_buffer.buffer = buffer;
+		data.bind_buffer.target = GL_ARRAY_BUFFER;
+		curRenderStep_->commands.push_back(data);
+	}
+
+	void BindPixelPackBuffer(GLRBuffer *buffer) {  // Want to support an offset but can't in ES 2.0. We supply an offset when binding the buffers instead.
+		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
+		GLRRenderData data{ GLRRenderCommand::BIND_BUFFER };
+		data.bind_buffer.buffer = buffer;
+		data.bind_buffer.target = GL_PIXEL_PACK_BUFFER;
 		curRenderStep_->commands.push_back(data);
 	}
 
 	void BindIndexBuffer(GLRBuffer *buffer) {  // Want to support an offset but can't in ES 2.0. We supply an offset when binding the buffers instead.
 		_dbg_assert_(G3D, curRenderStep_ && curRenderStep_->stepType == GLRStepType::RENDER);
-		GLRRenderData data{ GLRRenderCommand::BIND_INDEX_BUFFER};
+		GLRRenderData data{ GLRRenderCommand::BIND_BUFFER};
 		data.bind_buffer.buffer = buffer;
+		data.bind_buffer.target = GL_ELEMENT_ARRAY_BUFFER;
 		curRenderStep_->commands.push_back(data);
 	}
 
