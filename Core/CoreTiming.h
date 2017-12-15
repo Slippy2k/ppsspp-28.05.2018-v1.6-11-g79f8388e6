@@ -91,9 +91,8 @@ namespace CoreTiming
 
 	// userdata MAY NOT CONTAIN POINTERS. userdata might get written and reloaded from disk,
 	// when we implement state saves.
-	void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata=0);
-	void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata=0);
-	void ScheduleEvent_Threadsafe_Immediate(int event_type, u64 userdata=0);
+	void ScheduleEvent(s64 cyclesIntoFuture, int event_type, u64 userdata = 0);
+	void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata = 0);
 	s64 UnscheduleEvent(int event_type, u64 userdata);
 	s64 UnscheduleThreadsafeEvent(int event_type, u64 userdata);
 
@@ -111,7 +110,6 @@ namespace CoreTiming
 
 	// Clear all pending events. This should ONLY be done on exit or state load.
 	void ClearPendingEvents();
-
 	void LogPendingEvents();
 
 	// Warning: not included in save states.

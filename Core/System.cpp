@@ -84,6 +84,7 @@ static std::mutex cpuThreadLock;
 static std::condition_variable cpuThreadCond;
 static std::condition_variable cpuThreadReplyCond;
 static u64 cpuThreadUntil;
+static bool separateCPUThread;
 bool audioInitialized;
 
 bool coreCollectDebugStats = false;
@@ -129,14 +130,6 @@ void Audio_Init() {
 	if (!audioInitialized) {
 		audioInitialized = true;
 		host->InitSound();
-	}
-}
-
-bool IsOnSeparateCPUThread() {
-	if (cpuThread != nullptr) {
-		return cpuThreadID == std::this_thread::get_id();
-	} else {
-		return false;
 	}
 }
 
@@ -311,6 +304,7 @@ void UpdateLoadedFile(FileLoader *fileLoader) {
 	loadedFile = fileLoader;
 }
 
+// This is the "Separate CPU thread".
 void CPU_RunLoop() {
 	setCurrentThreadName("CPU");
 
@@ -406,7 +400,7 @@ bool PSP_InitStart(const CoreParameter &coreParam, std::string *error_string) {
 	pspIsIniting = true;
 
 	// Keeping this around because we might need it in the future.
-	const bool separateCPUThread = false;
+	separateCPUThread = coreParameter.gpuCore == GPUCORE_GLES;
 	if (separateCPUThread) {
 		Core_ListenShutdown(System_Wake);
 		CPU_SetState(CPU_THREAD_PENDING);
@@ -525,18 +519,16 @@ void PSP_RunLoopUntil(u64 globalticks) {
 
 	// We no longer allow a separate CPU thread but if we add a render queue
 	// to GL we're gonna need it.
-	bool useCPUThread = false;
-	if (useCPUThread && cpuThread == nullptr) {
+	if (separateCPUThread && cpuThread == nullptr) {
 		// Need to start the cpu thread.
 		Core_ListenShutdown(System_Wake);
 		CPU_SetState(CPU_THREAD_RESUME);
 		cpuThread = new std::thread(&CPU_RunLoop);
 		cpuThreadID = cpuThread->get_id();
 		cpuThread->detach();
-		// Probably needs to tell the gpu that it will need to queue up its output
-		// on another thread.
+
 		CPU_WaitStatus(cpuThreadReplyCond, &CPU_IsReady);
-	} else if (!useCPUThread && cpuThread != nullptr) {
+	} else if (!separateCPUThread && cpuThread != nullptr) {
 		CPU_SetState(CPU_THREAD_QUIT);
 		CPU_WaitStatus(cpuThreadReplyCond, &CPU_IsShutdown);
 		delete cpuThread;
@@ -561,8 +553,6 @@ void PSP_RunLoopUntil(u64 globalticks) {
 	} else {
 		mipsr4k.RunLoopUntil(globalticks);
 	}
-
-	gpu->CleanupBeforeUI();
 }
 
 void PSP_RunLoopFor(int cycles) {

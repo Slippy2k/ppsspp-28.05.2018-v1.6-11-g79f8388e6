@@ -178,7 +178,10 @@ public:
 	GLRenderManager();
 	~GLRenderManager();
 
+	// Not gonna use this one, instead will call ThreadFrame repeatedly.
 	void ThreadFunc();
+
+	bool ThreadFrame();
 
 	// Makes sure that the GPU has caught up enough that we can start writing buffers of this frame again.
 	void BeginFrame();
@@ -655,9 +658,14 @@ private:
 
 	GLDeleter deleter_;
 
-	bool useThread_ = false;
+	bool useThread_ = true;
 
 	int curFrame_ = 0;
+
+	// Thread state
+	int threadFrame = 0;
+	bool nextFrame = false;
+	bool firstFrame = true;
 
 	int targetWidth_ = 0;
 	int targetHeight_ = 0;

@@ -232,7 +232,6 @@ public:
 	}
 	std::vector<FramebufferInfo> GetFramebufferList() override;
 	void ClearShaderCache() override {}
-	void CleanupBeforeUI() override {}
 
 	s64 GetListTicks(int listid) override {
 		if (listid >= 0 && listid < DisplayListMaxCount) {

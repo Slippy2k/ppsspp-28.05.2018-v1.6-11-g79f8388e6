@@ -87,9 +87,8 @@ void FramebufferManagerGLES::DisableState() {
 void FramebufferManagerGLES::CompileDraw2DProgram() {
 	if (!draw2dprogram_) {
 		std::string errorString;
-		static std::string vs_code, fs_code;
-		vs_code = ApplyGLSLPrelude(basic_vs, GL_VERTEX_SHADER);
-		fs_code = ApplyGLSLPrelude(tex_fs, GL_FRAGMENT_SHADER);
+		std::string vs_code = ApplyGLSLPrelude(basic_vs, GL_VERTEX_SHADER);
+		std::string fs_code = ApplyGLSLPrelude(tex_fs, GL_FRAGMENT_SHADER);
 		std::vector<GLRShader *> shaders;
 		shaders.push_back(render_->CreateShader(GL_VERTEX_SHADER, vs_code));
 		shaders.push_back(render_->CreateShader(GL_FRAGMENT_SHADER, fs_code));

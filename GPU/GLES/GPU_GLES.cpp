@@ -733,11 +733,6 @@ void GPU_GLES::ClearShaderCache() {
 	shaderManagerGL_->ClearCache(true);
 }
 
-void GPU_GLES::CleanupBeforeUI() {
-	// Clear any enabled vertex arrays.
-	shaderManagerGL_->DirtyLastShader();
-}
-
 void GPU_GLES::DoState(PointerWrap &p) {
 	GPUCommon::DoState(p);
 

@@ -246,8 +246,9 @@ u64 GetIdleTicks()
 }
 
 
-// This is to be called when outside threads, such as the graphics thread, wants to
-// schedule things to be executed on the main thread.
+// This is to be called when outside threads, such as AdHoc stuff, wants to
+// schedule things to be executed on the main thread. Graphics no longer use this,
+// it's multithreaded a different way.
 void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata)
 {
 	std::lock_guard<std::mutex> lk(externalEventLock);
@@ -263,19 +264,6 @@ void ScheduleEvent_Threadsafe(s64 cyclesIntoFuture, int event_type, u64 userdata
 	tsLast = ne;
 
 	Common::AtomicStoreRelease(hasTsEvents, 1);
-}
-
-// Same as ScheduleEvent_Threadsafe(0, ...) EXCEPT if we are already on the CPU thread
-// in which case the event will get handled immediately, before returning.
-void ScheduleEvent_Threadsafe_Immediate(int event_type, u64 userdata)
-{
-	if(false) //Core::IsCPUThread())
-	{
-		std::lock_guard<std::mutex> lk(externalEventLock);
-		event_types[event_type].callback(userdata, 0);
-	}
-	else
-		ScheduleEvent_Threadsafe(0, event_type, userdata);
 }
 
 void ClearPendingEvents()

@@ -54,7 +54,6 @@ public:
 	void DoState(PointerWrap &p) override;
 
 	void ClearShaderCache() override;
-	void CleanupBeforeUI() override;
 	bool DecodeTexture(u8 *dest, const GPUgstate &state) override {
 		return textureCacheGL_->DecodeTexture(dest, state);
 	}
