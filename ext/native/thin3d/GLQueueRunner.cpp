@@ -82,11 +82,9 @@ void GLQueueRunner::RunInitSteps(const std::vector<GLRInitStep> &steps) {
 				glBindFragDataLocation(program->program, 0, "fragColor0");
 			}
 #elif !defined(IOS)
-			if (gl_extensions.GLES3) {
-				if (gstate_c.featureFlags & GPU_SUPPORTS_DUALSOURCE_BLEND) {
-					glBindFragDataLocationIndexedEXT(program->program, 0, 0, "fragColor0");
-					glBindFragDataLocationIndexedEXT(program->program, 0, 1, "fragColor1");
-				}
+			if (gl_extensions.GLES3 && step.create_program.support_dual_source) {
+				glBindFragDataLocationIndexedEXT(program->program, 0, 0, "fragColor0");
+				glBindFragDataLocationIndexedEXT(program->program, 0, 1, "fragColor1");
 			}
 #endif
 			glLinkProgram(program->program);
@@ -497,7 +495,11 @@ void GLQueueRunner::PerformRenderPass(const GLRStep &step) {
 
 			// TODO: Support FP viewports through glViewportArrays
 			glViewport((GLint)c.viewport.vp.x, (GLint)y, (GLsizei)c.viewport.vp.w, (GLsizei)c.viewport.vp.h);
+#if !defined(USING_GLES2)
 			glDepthRange(c.viewport.vp.minZ, c.viewport.vp.maxZ);
+#else
+			glDepthRangef(c.viewport.vp.minZ, c.viewport.vp.maxZ);
+#endif
 			break;
 		}
 		case GLRRenderCommand::SCISSOR:
