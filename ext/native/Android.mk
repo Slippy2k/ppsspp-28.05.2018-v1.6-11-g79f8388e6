@@ -85,6 +85,8 @@ LOCAL_SRC_FILES :=\
     thin3d/thin3d_vulkan.cpp \
     thin3d/VulkanRenderManager.cpp \
     thin3d/VulkanQueueRunner.cpp \
+    thin3d/GLRenderManager.cpp \
+    thin3d/GLQueueRunner.cpp \
     ui/view.cpp \
     ui/viewgroup.cpp \
     ui/ui.cpp \
