@@ -2,7 +2,7 @@
 // Does not involve context creation etc, that should be handled separately - only does drawing.
 
 // The goals may change in the future though.
-// MIT licensed, by Henrik Rydgård 2014.
+// MIT licensed, by Henrik RydgÃ¥rd 2014.
 
 #pragma once
 
@@ -490,6 +490,7 @@ struct DeviceCaps {
 	bool framebufferBlitSupported;
 	bool framebufferDepthCopySupported;
 	bool framebufferDepthBlitSupported;
+	std::string deviceName;  // The device name to use when creating the thin3d context, to get the same one.
 };
 
 struct TextureDesc {
@@ -531,6 +532,7 @@ public:
 	virtual uint32_t GetDataFormatSupport(DataFormat fmt) const = 0;
 	virtual std::vector<std::string> GetFeatureList() const { return std::vector<std::string>(); }
 	virtual std::vector<std::string> GetExtensionList() const { return std::vector<std::string>(); }
+	virtual std::vector<std::string> GetDeviceList() const { return std::vector<std::string>(); }
 
 	virtual uint32_t GetSupportedShaderLanguages() const = 0;
 
